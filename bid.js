@@ -67,7 +67,7 @@ sub.on('message', function(channel, message) {
 
       zen.send_privmsg(msg.data.channel, 'Ok, I\'ll collect bids from them');
 
-    } else if(match=msg.data.message.match(/^[\/!]bid ([0-9\.]+)$/)) {
+    } else if(match=msg.data.message.match(/^[\/!]bid ([0-9\.\-]+)$/)) {
       console.log(sender+' > '+msg.data.channel+' :: '+msg.data.message);
       console.log("\t\t(accepting a bid)");
 
@@ -117,6 +117,7 @@ sub.on('message', function(channel, message) {
         }
       });
     } else if(msg.data.message.match(/^[\/!]bid$/)) {
+      console.log(sender+' > '+msg.data.channel+' :: '+msg.data.message);
 
       redis.get('current-bid', function(err, current_bid){
         if(current_bid == null) {
@@ -137,6 +138,8 @@ sub.on('message', function(channel, message) {
       });
 
     } else if(match=msg.data.message.match(/^[\/!]bid [^@]+$/)) {
+      console.log(sender+' > '+msg.data.channel+' :: '+msg.data.message);
+
       // Catch some common errors, such as not mentioning people with an "@"
       var message = 'Sorry I didn\'t get that. Try: !bid for buying groceries with @bee';
       console.log('me > '+msg.data.channel+' :: '+message);
