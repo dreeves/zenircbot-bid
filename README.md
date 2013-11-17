@@ -9,6 +9,7 @@ Usage Example
 ```
 [in the main channel]
 aaronpk: !bid for buying groceries @dreev @bee
+Loqi: ok, I'll collect bids from them!
 [the bot PMs each person with the following]
 Loqi: aaronpk is requesting bids for buying groceries. Reply with "!bid 20"
 aaronpk: !bid 20
