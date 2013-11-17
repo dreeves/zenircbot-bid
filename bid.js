@@ -15,15 +15,12 @@ sub.on('message', function(channel, message) {
   var sender = msg.data.sender;
   // Only respond to standard "privmsg" messages (includes channel and private messages)
   if(msg.version == 1 && msg.type == "privmsg") {
-    if(match=msg.data.message.match(/^[\/!]bid ([^@]+) (@.+)/i)) {
+    if(match=msg.data.message.match(/^[\/!]bid (?:([^@]+) )?(@.+)/i)) {
 
       console.log(sender+' > '+msg.data.channel+' :: '+msg.data.message);
       console.log("\t\t(starting a new bid)");
 
-      // Match the proper '!bid' or '/bid' command
-      //console.log(match);
-
-      var description = match[1].replace(/ with$/, '');
+      var description = (match[1] ? match[1].replace(/ with$/, '') : '');
       var people = match[2].match(/@?[a-z]+/gi);
 
       // also add the initiator to the list of people
@@ -53,7 +50,7 @@ sub.on('message', function(channel, message) {
               if(sender.replace(/^@/,'') == person.replace(/^@/,'')) {
                 message = 'Tell me your bid by replying with "!bid 20"';
               } else {
-                message = sender+' is requesting bids '+description+'. Reply with "!bid 20"';
+                message = sender+' is requesting your bid' + (description ? ' '+description : '') + '. Reply with "!bid 20"';
               }
               console.log('me > '+pmid+' :: '+message);
               zen.send_privmsg(pmid, message);
