@@ -27,7 +27,9 @@ sub.on('message', function(channel, message) {
       var people = match[2].match(/@?[a-z]+/gi);
 
       // also add the initiator to the list of people
-      people.push('@'+sender.replace(/^@/, ''));
+      if(people.indexOf('@'+sender.replace(/^@/, '')) == -1) {
+        people.push('@'+sender.replace(/^@/, ''));
+      }
 
       redis.set('current-bid', JSON.stringify({
         initiator: sender,
@@ -55,6 +57,8 @@ sub.on('message', function(channel, message) {
               }
               console.log('me > '+pmid+' :: '+message);
               zen.send_privmsg(pmid, message);
+            } else {
+              console.log('error finding pmid for nick: '+person);
             }
           })
 
@@ -141,6 +145,14 @@ sub.on('message', function(channel, message) {
   }
 });
 
+// This is hard-coded for Hipchat now, need to figure out how to make this work better for IRC too
 function pmid_for_nick(nick, callback) {
-  redis.get('pmid-'+nick, callback);
+  redis.get('zenircbot:nick:'+nick.replace(/^@/,''), function(err, response){
+  	  var data = JSON.parse(response);
+	  if(err || data == null){
+		  callback(err, null);
+	  } else {
+		  callback(null, data.jid);
+	  }
+  });
 }
