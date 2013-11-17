@@ -3,6 +3,7 @@ Sealed Bidding
 
 A sealed bidding service for [ZenIRCBot](https://github.com/zenirc).
 
+
 Usage Example
 -------------
 
