@@ -45,7 +45,7 @@ sub.on('message', function(channel, message) {
           // Look up the ID to send a private message to each user
           pmid_for_nick(person, function(err, pmid){
             if(pmid) {
-              var message = 'Collecting bids for: ' + urtext;
+              var message = 'Collecting bids for "' + urtext + '". Reply with "/bid YOUR_BID_HERE":';
               //if(sender.replace(/^@/,'') == person.replace(/^@/,'')) ... nah, don't bother distinguishing
               console.log('me > '+pmid+' :: '+message);
               zen.send_privmsg(pmid, message);
@@ -124,7 +124,7 @@ sub.on('message', function(channel, message) {
               names.push(name);
             }
             // TODO: say, like, still waiting on {people - names}, maybe with @-mentions
-            var message = 'For "' + urtext + '", collected bids from: '+names.join(', ');
+            var message = 'Collected bids from: '+names.join(', ');
             console.log('me > '+msg.data.channel+' :: '+message);
             zen.send_privmsg(msg.data.channel, message);
           });
