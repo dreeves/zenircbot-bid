@@ -35,17 +35,17 @@ sub.on('message', function(channel, message) {
       }));
       redis.del('current-bid-values');
 
-      // console.log({
-      //   description: description,
-      //   people: people
-      // });
+      console.log({
+        description: urtext,
+        people: people
+      });
 
       for(var i=0; i<people.length; i++) {
         (function(msg, sender, description, people, person){
           // Look up the ID to send a private message to each user
           pmid_for_nick(person, function(err, pmid){
             if(pmid) {
-              var message = 'Collecting bids for: ' + urtext;
+              var message = 'Collecting bids for: ' + urtext + ' Tell me your bid by replying with "/bid 20"';
               //if(sender.replace(/^@/,'') == person.replace(/^@/,'')) ... nah, don't bother distinguishing
               console.log('me > '+pmid+' :: '+message);
               zen.send_privmsg(pmid, message);
@@ -81,8 +81,8 @@ sub.on('message', function(channel, message) {
           // Check if we have collected all the bids
           (function(current_bid){
             redis.hgetall('current-bid-values', function(err, bid_data){
-              // console.log("Current bid:", current_bid);
-              // console.log("Bid data:", bid_data);
+              console.log("Current bid:", current_bid);
+              console.log("Bid data:", bid_data);
 
               var complete = true;
               for(var i=0; i<current_bid.people.length; i++) {
@@ -90,7 +90,7 @@ sub.on('message', function(channel, message) {
                   complete = false;
                 }
               }
-              // console.log("Bid complete? " + (complete ? "y" : "n"));
+              console.log("Bid complete? " + (complete ? "y" : "n"));
 
               if(complete) {
                 // Output all bids back to the main channel
@@ -124,7 +124,7 @@ sub.on('message', function(channel, message) {
               names.push(name);
             }
             // TODO: say, like, still waiting on {people - names}, maybe with @-mentions
-            var message = 'For "' + urtext + '", collected bids from: '+names.join(', ');
+            var message = 'Collected bids from: '+names.join(', ');
             console.log('me > '+msg.data.channel+' :: '+message);
             zen.send_privmsg(msg.data.channel, message);
           });
