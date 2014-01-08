@@ -14,15 +14,14 @@ sub.on('message', function(channel, message) {
   var msg = JSON.parse(message);
   var sender = msg.data.sender;
   // Only respond to standard "privmsg" messages (includes channel and private messages)
-  if(msg.version == 1 && msg.type == "privmsg") {
-    if(match=msg.data.message.match(/^[\/!]bid (?:([^@]+) )?(@.+)/i)) {
+  if(msg.version == 1 && msg.type == "privmsg") { // TODO: just return unless this is true
+    if(match=msg.data.message.match(/^[\/!]bid (?:([^@]+) )?(@.+)/i)) { // TODO: just does it have an '@' at all
 
       console.log(sender+' > '+msg.data.channel+' :: '+msg.data.message);
-      console.log("\t\t(starting a new bid)");
+      console.log("\t\t(starting a new auction)");
 
-      var description = (match[1] ? match[1].replace(/ with$/, '') : '');
-      var people = match[2].match(/@?[a-z]+/gi);
-
+      var urtext = msg.data.message; // the original string used to initiate the auction
+      var people = match[2].match(/@[a-z]\w*/gi); // great for hipchat with @-names assumed, not for irc
       // also add the initiator to the list of people
       if(people.indexOf('@'+sender.replace(/^@/, '')) == -1) {
         people.push('@'+sender.replace(/^@/, ''));
@@ -31,7 +30,7 @@ sub.on('message', function(channel, message) {
       redis.set('current-bid', JSON.stringify({
         initiator: sender,
         channel: msg.data.channel,
-        description: description,
+        description: urtext,
         people: people
       }));
       redis.del('current-bid-values');
@@ -46,12 +45,8 @@ sub.on('message', function(channel, message) {
           // Look up the ID to send a private message to each user
           pmid_for_nick(person, function(err, pmid){
             if(pmid) {
-              var message;
-              if(sender.replace(/^@/,'') == person.replace(/^@/,'')) {
-                message = 'Tell me your bid by replying with "!bid 20"';
-              } else {
-                message = sender+' is requesting your bid' + (description ? ' '+description : '') + '. Reply with "!bid 20"';
-              }
+              var message = 'Collecting bids for: ' + urtext;
+              //if(sender.replace(/^@/,'') == person.replace(/^@/,'')) ... nah, don't bother distinguishing
               console.log('me > '+pmid+' :: '+message);
               zen.send_privmsg(pmid, message);
             } else {
@@ -59,26 +54,27 @@ sub.on('message', function(channel, message) {
             }
           })
 
-        })(msg, sender, description, people, people[i]);
+        })(msg, sender, urtext, people, people[i]);
       }
 
-      zen.send_privmsg(msg.data.channel, 'Ok, I\'ll collect bids from them');
+      zen.send_privmsg(msg.data.channel, 'Ok, collecting bids from: ' + people.join(", "));
 
-    } else if(match=msg.data.message.match(/^[\/!]bid ([0-9\.\-]+)$/)) {
+    } else if(match=msg.data.message.match(/^[\/!]bid ([^@]+)$/)) { // no '@' => it's an actual bid
       console.log(sender+' > '+msg.data.channel+' :: '+msg.data.message);
       console.log("\t\t(accepting a bid)");
 
       // Reject if no bid in progress
       redis.get('current-bid', function(err, current_bid){
         if(current_bid == null) {
-          var message = 'Sorry, there is no bid in progress. Try: !bid for buying groceries with @bee';
+          var message = 'Sorry, no auction in progress. Try: /bid for buying groceries with @bee';
           console.log('me > '+msg.data.channel+' :: '+message);
           zen.send_privmsg(msg.data.channel, message);
         } else {
+          var bidstring = match[1];
           // Store this person's bid
-          redis.hset('current-bid-values', sender.replace(/^@/,''), match[1]);
+          redis.hset('current-bid-values', sender.replace(/^@/,''), bidstring);
 
-          var message = 'Got it! I\'ll report back when I\'ve collected everyone\'s bids.';
+          var message = 'Got your bid as "' + bidstring + '". I\'ll report back when I\'ve collected everyone\'s.';
           console.log('me > '+msg.data.channel+' :: '+message);
           zen.send_privmsg(msg.data.channel, message);
 
@@ -113,12 +109,12 @@ sub.on('message', function(channel, message) {
           })(JSON.parse(current_bid));
         }
       });
-    } else if(msg.data.message.match(/^[\/!]bid$/)) {
+    } else if(msg.data.message.match(/^[\/!]bid$/)) { // a plain "/bid" reports on the status of the auction
       console.log(sender+' > '+msg.data.channel+' :: '+msg.data.message);
 
       redis.get('current-bid', function(err, current_bid){
         if(current_bid == null) {
-          var message = 'There is no bid in progress.';
+          var message = 'There is no auction in progress.';
           console.log('me > '+msg.data.channel+' :: '+message);
           zen.send_privmsg(msg.data.channel, message);
         } else {
@@ -127,18 +123,19 @@ sub.on('message', function(channel, message) {
             for(var name in bid_data) {
               names.push(name);
             }
-            var message = 'So far I have collected bids from: '+names.join(', ');
+            // TODO: say, like, still waiting on {people - names}, maybe with @-mentions
+            var message = 'For "' + urtext + '", collected bids from: '+names.join(', ');
             console.log('me > '+msg.data.channel+' :: '+message);
             zen.send_privmsg(msg.data.channel, message);
           });
         }
       });
 
-    } else if(match=msg.data.message.match(/^[\/!]bid [^@]+$/)) {
+    } else if(match=msg.data.message.match(/^[\/!]bid [^@]+$/)) { // TODO: i think this is never reached now
       console.log(sender+' > '+msg.data.channel+' :: '+msg.data.message);
 
       // Catch some common errors, such as not mentioning people with an "@"
-      var message = 'Sorry I didn\'t get that. Try: !bid for buying groceries with @bee';
+      var message = 'Sorry I didn\'t get that. Try: /bid for buying groceries with @bee';
       console.log('me > '+msg.data.channel+' :: '+message);
       zen.send_privmsg(msg.data.channel, message);
     }
