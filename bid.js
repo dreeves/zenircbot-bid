@@ -45,7 +45,7 @@ sub.on('message', function(channel, message) {
           // Look up the ID to send a private message to each user
           pmid_for_nick(person, function(err, pmid){
             if(pmid) {
-              var message = 'Collecting bids for: ' + urtext + ' Tell me your bid by replying with "/bid 20"';
+              var message = urtext + "\nReply with your bid, e.g., \"/bid 20\"";
               //if(sender.replace(/^@/,'') == person.replace(/^@/,'')) ... nah, don't bother distinguishing
               console.log('me > '+pmid+' :: '+message);
               zen.send_privmsg(pmid, message);
@@ -98,7 +98,8 @@ sub.on('message', function(channel, message) {
                 for(var i=0; i<current_bid.people.length; i++) {
                   bid_strings.push(current_bid.people[i] + ": " + bid_data[current_bid.people[i].replace(/^@/,'')]);
                 }
-                var message = "Bidding complete! Here are the bids: "+bid_strings.join(', ');
+                var message = "BIDS: "+bid_strings.join(', ')+". Bernoulli(.1) says "+
+                  (Math.random() < 0.1 ? "PAY 10X!!" : "no payments!");
                 console.log('me > '+current_bid.channel+' :: '+message);
                 zen.send_privmsg(current_bid.channel, message);
                 redis.del('current-bid');
