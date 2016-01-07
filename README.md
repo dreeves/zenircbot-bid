@@ -26,7 +26,7 @@ Commands
 
 ### Start a new bid
 
-`!bid for buiying groceries with @dreev @bee`
+`!bid for buying groceries with @dreev @bee`
 
 Creates a new bid for buying groceries between the users mentioned as well as the user who created the bid. The bot will send a PM to each person mentioned prompting them to submit their bid.
 
